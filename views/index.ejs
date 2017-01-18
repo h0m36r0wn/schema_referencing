@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+  </head>
+  <body>
+    <section id="form-section">
+      <div class="container">
+        <h1>Moongose ODM <span class="glyphicon glyphicon-file" aria-hidden="true"></span></h1>
+        <div id="formcontainer">
+          <div class="col-lg-6">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h4>Create Team</h4>
+              </div>
+              <div class="panel-body">
+                <form id="teamForm">
+                  <div class="form-group">
+                    <label>Team Name</label>
+                    <input type="text" name="team_name" value="" class="form-control input-lg">
+                  </div>
+                  <div class="member-container">
+                    <label>Team Members</label>
+                    <div class="form-group team-member">
+                      <div class="row">
+                        <div class="col-lg-10 col-xs-10 col-sm-10 col-md-10">
+                          <input type="text" name="team_member" value="" class="form-control input-lg">
+                        </div>
+                        <div class="col-lg-2 col-xs-2 col-sm-10 col-md-2">
+                          <button type="button" class="btn btn-primary btn-lg add-member"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <button type="button" class="btn btn-primary btn-lg btn-block" id="create-team">Create Team</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- SEARCH FORM  -->
+          <div class="col-lg-6">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h4>Search Team</h4>
+              </div>
+              <div class="panel-body">
+                <div class="form-group">
+                  <label>Enter team name</label>
+                  <input type="text" name="team_name_search" value="" class="input-lg form-control" placeholder="enter name here" id="teamName">
+                </div>
+                <div class="form-group">
+                  <label id="teamNameResult"></label>
+                  <ul id="teamMembersContainer"></ul>
+                </div>
+                <div class="form-group" id="resultMessage">
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+
+    </section>
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.js"></script>
+    <script type="text/javascript" src="/js/socket.io.min.js"></script>
+    <script type="text/javascript" src="/js/noty/packaged/jquery.noty.packaged.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function(){
+        teamFuncs.init();
+      });
+      var teamFuncs = (function(){
+        var $addBtn = $('.add-member');
+        var $inputGroup = $('.team-member');
+        var $createBtn = $('#create-team');
+        var $form = $('#teamForm');
+        var $teamName = $('#teamName');
+        var $memberContainer = $('#teamMembersContainer');
+        var $messageContainer = $('#resultMessage');
+        var $teamNameResult = $('#teamNameResult');
+        var socket = io('http://localhost:3000');
+        var init = function(){
+          cloneElem();
+          getData();
+          notify();
+          getTeamName();
+        }
+
+        var notification = function(text,type){
+          var notif = noty({
+            text:text,
+            layout: 'bottomRight',
+            speed:500,
+            theme:'relax',
+            type:type || 'information'
+          })
+
+          return notif;
+        }
+        var notify = function(){
+          socket.on('createSuccess', function(message){
+            notification(message, 'success');
+          })
+          socket.on('errorCreating', function(message){
+            notification(message, 'error');
+          })
+        }
+        var cloneElem = function(){
+          $addBtn.off().on('click',function(){
+            $inputGroup.clone(true,true).find("input:text").val("").end().insertAfter("div.team-member:last");
+          })
+        }
+        var getData = function(){
+          $createBtn.unbind().click(function(){
+            $(this).prop('disabled',true);
+            var formData = {
+              team_members:[]
+            };
+            var data = $form.serializeArray().map(function(obj){
+              if(obj.name == "team_name") formData.team_name = obj.value;
+              if(obj.name == "team_member") formData.team_members.push({full_name:obj.value})
+            })
+            $('input:text').val("");
+            emitTeamInfo(formData);
+            var memberInputNum = $('.team-member').length;
+            for (var i = 1; i < memberInputNum; i++) {
+              $('.team-member:last').remove();
+            }
+
+
+            $(this).prop('disabled',false);
+          })
+        }
+        var emitTeamInfo = function(teamInfo){
+          socket.emit('createTeam',teamInfo);
+        }
+
+        var typingTimer;
+        var getTeamName = function(){
+          $teamName.focus(function(){
+            $(this).val('');
+          })
+          $teamName.keyup(function(){
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(searchTeam, 1000)
+          })
+
+          $teamName.keydown(function(){
+              clearTimeout(typingTimer);
+          })
+        }
+        var searchTeam = function(){
+
+          socket.emit('searchTeam',$teamName.val(),function(err, result){
+            $messageContainer.html('');
+            $memberContainer.html('');
+            $teamNameResult.html('');
+            if(typeof result.length == 'undefined'){
+              $teamNameResult.html(result.team.team_name);
+              if(result.members.length > 0){
+                $.each(result.members, function(ind, obj){
+                  var elem = '<li>'+obj.full_name+'</li>';
+                  $memberContainer.append(elem);
+                })
+                $messageContainer.html('');
+              }
+            }else{
+              // $memberContainer.html('');
+              // $teamNameResult.html('');
+              $messageContainer.html('<h3>Team not found</h3>')
+            }
+          })
+        }
+        return { init: init }
+      }())
+    </script>
+  </body>
+</html>

@@ -1,0 +1,64 @@
+body{
+  background: #78909C;
+}
+h1{
+  margin-left: 20px;
+  font-weight: bold;
+  color:#78909C;
+}
+#form-section{
+  min-height: 100vh;
+  background: #78909C;
+}
+#formcontainer{
+  margin-top: 50px;
+}
+.container{
+  background: #fff;
+  min-height: 100vh;
+  padding: 40px
+}
+.panel-body{
+  padding: 20px 30px;
+}
+.panel{
+    box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+}
+.panel-body .btn{
+  background: #64FFDA;
+  color:#004D40;
+  font-weight: bold;
+  border:0;
+  text-transform: uppercase;
+}
+.panel-heading{
+  background: #6A1B9A !important;
+}
+.panel-heading h4{
+  color:#fff;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+label{
+  color:#455A64;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+}
+#teamMembersContainer{
+  list-style: none;
+}
+#teamMembersContainer li{
+  font-size: 2.2rem;
+}
+
+#teamNameResult{
+  display: block;
+  margin-left: 38px;
+  font-size: 2.5rem;
+}
+
+#resultMessage h3{
+  color:#F44336;
+  font-weight: bold;
+  font-size: 2.5rem;
+}
